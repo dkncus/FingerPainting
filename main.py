@@ -12,39 +12,7 @@ import copy
 from gesture_model import KeyPointClassifier
 from gesture_model import PointHistoryClassifier
 
-# Hand detector
-mpHands = mp.solutions.hands
-hands = mpHands.Hands(static_image_mode=False,
-                      max_num_hands=2,
-                      min_detection_confidence=0.5,
-                      min_tracking_confidence=0.5)
-mpDraw = mp.solutions.drawing_utils
-
-# Gesture Detection Models
-keypoint_classifier = KeyPointClassifier()
-with open('gesture_model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
-    keypoint_classifier_labels = csv.reader(f)
-    keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
-
-
-history_length = 16
-finger_gesture_history = deque(maxlen=history_length)
-
-# Start a video capture from the inbuilt webcam
-cap = cv.VideoCapture(0)
-
-past_time = 0
-current_time = 0
-circles = []
-num_past_gestures = 8
-past_gestures = []
-
-hsv_icon = cv.imread('assets/hsv_icons/hsv_icon_color.png')
-mask_icon = cv.imread('assets/hsv_icons/hsv_icon_mask.png')
-mask_icon = 1 - (mask_icon / 255).astype(np.uint8)
-
-cv.imshow('mask', mask_icon * 255)
-cv.imshow('hsv', hsv_icon)
+global hands, mpHands, mpDraw, hsv_icon, mask_icon, past_gestures, num_past_gestures, circles, keypoint_classifier
 
 def interpret_frame(image):
     img_debug = image.copy()
@@ -99,8 +67,8 @@ def interpret_frame(image):
                 s = 50
                 # Check if in image bounds
                 if not (x_c - s < 0 or x_c + s > w or y_c - s < 0 or y_c + s > h):
-                    color_mask = np.zeros_like(img)
-                    transparency_mask = np.zeros_like(img)
+                    color_mask = np.zeros_like(img_debug)
+                    transparency_mask = np.zeros_like(img_debug)
 
                     color_mask[y_c - s:y_c + s, x_c - s:x_c + s, :] = hsv_icon
                     transparency_mask[y_c - s:y_c + s, x_c - s:x_c + s, :] = mask_icon
@@ -122,7 +90,7 @@ def interpret_frame(image):
 
         if i < len(circles) - 1 and len(circles) > 2:
             pass
-            # cv.line(img_debug, circle, circles[i+1], (255, 255, 255), thickness=5)
+            cv.line(img_debug, circle, circles[i+1], (255, 255, 255), thickness=5)
 
 
 
@@ -154,6 +122,7 @@ def detect_gesture(coords, past_gestures):
     else:
         return 0
 
+
 def calc_bounding_rect(image, landmarks):
     image_width, image_height = image.shape[1], image.shape[0]
 
@@ -171,6 +140,7 @@ def calc_bounding_rect(image, landmarks):
 
     return [x, y, x + w, y + h]
 
+
 def draw_bounding_rect(use_brect, image, brect):
     # Draw the image using the bounding rectangle
     if use_brect:
@@ -178,6 +148,7 @@ def draw_bounding_rect(use_brect, image, brect):
                      (0, 0, 0), 1)
 
     return image
+
 
 def calc_landmark_list(image, landmarks):
     """
@@ -199,6 +170,7 @@ def calc_landmark_list(image, landmarks):
         landmark_point.append([landmark_x, landmark_y])
 
     return landmark_point
+
 
 def pre_process_landmark(landmark_list):
     temp_landmark_list = copy.deepcopy(landmark_list)
@@ -223,7 +195,38 @@ def pre_process_landmark(landmark_list):
 
     return temp_landmark_list
 
-if __name__ == '__main__':
+def runApp():
+
+    # Hand detector
+    mpHands = mp.solutions.hands
+    hands = mpHands.Hands(static_image_mode=False,
+                          max_num_hands=2,
+                          min_detection_confidence=0.5,
+                          min_tracking_confidence=0.5)
+    mpDraw = mp.solutions.drawing_utils
+
+    # Gesture Detection Models
+    keypoint_classifier = KeyPointClassifier()
+    with open('gesture_model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
+        keypoint_classifier_labels = csv.reader(f)
+        keypoint_classifier_labels = [row[0] for row in keypoint_classifier_labels]
+
+    history_length = 16
+    finger_gesture_history = deque(maxlen=history_length)
+
+    # Start a video capture from the inbuilt webcam
+    cap = cv.VideoCapture(0)
+
+    past_time = 0
+    current_time = 0
+    circles = []
+    num_past_gestures = 8
+    past_gestures = []
+
+    hsv_icon = cv.imread('assets/hsv_icons/hsv_icon_color.png')
+    mask_icon = cv.imread('assets/hsv_icons/hsv_icon_mask.png')
+    mask_icon = 1 - (mask_icon / 255).astype(np.uint8)
+
     # Main loop
     while True:
         # Read an image from the webcam
@@ -231,6 +234,9 @@ if __name__ == '__main__':
 
         # If an image from the webcam comes across
         if success:
-
             # Interpret it
             interpret_frame(img)
+
+
+if __name__ == '__main__':
+    runApp()

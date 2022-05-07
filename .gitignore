@@ -1,2 +1,6 @@
 .idea/
 venv/
+gesture_model/__pycache__/
+gesture_model/keypoint_classifier/__pycache__/
+gesture_model/point_history_classifier/__pycache__/
+.DS_Store

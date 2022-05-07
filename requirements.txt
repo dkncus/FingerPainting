@@ -155,3 +155,4 @@ python-dateutil==2.8.2
 pytweening==1.0.4
 rubicon-objc==0.4.2
 six==1.16.0
+flask==2.1.2

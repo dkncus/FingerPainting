@@ -6,14 +6,6 @@ import itertools
 import copy
 import math
 
-'''
-NOTES
-
-- Fuck you to Clear Screen
-- Voice detection to give the answer
-
-'''
-
 # Gesture Tracking Models
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
@@ -66,8 +58,16 @@ class Interpreter():
 
         # Color selection parameters
         self.current_color = (0, 0, 0)
-        self.aux_color_offset = 100
-        self.color_icon_radius = 40
+        self.icon_radius = 15
+        self.black_icon_pos = (0, 0)
+        self.brown_icon_pos = (0, 0)
+        self.white_icon_pos = (0, 0)
+
+        # Line Type Icons
+        self.sketch_icon_pos = (0, 0)
+        self.line_icon_pos = (0, 0)
+        self.rect_icon_pos = (0, 0)
+        self.circle_icon_pos = (0, 0)
 
         # Icons drawn on the screen when open palm is shown
         self.hsv_icon = cv.imread('assets/hsv_icons/hsv_icon_color.png')
@@ -166,7 +166,7 @@ class Interpreter():
         x_c = int(round(((x_1 + x_2) / 2), 0))
         y_c = int(round(((y_1 + y_2) / 2), 0))
 
-        # If the hand is making a forward facing palm gesture
+        # If the hand is making a forward facing palm gesture, draw GUI
         if hand_sign_id == 0:
             # Draw a circle with the current color at the center of the palm
             x_1, y_1 = landmark_list[0]
@@ -176,38 +176,38 @@ class Interpreter():
             y_hand_c = int(round(((y_1 + y_2 + y_3) / 3), 0))
             image_debug = cv.circle(image_debug,
                                     (x_hand_c, y_hand_c),
-                                    self.color_icon_radius//2,
+                                    self.icon_radius//2,
                                     self.current_color,
                                     cv.FILLED)
 
             # Draw Auxilliary Colors (brown, black, white)
-            if not (y_hand_c - self.aux_color_offset< 0 or y_hand_c + self.aux_color_offset > h):
-                if not (x_hand_c - self.aux_color_offset < 0 or x_hand_c + self.aux_color_offset > w):
-                    # White Color
-                    image_debug = cv.circle(image_debug,
-                                            (x_hand_c, y_hand_c - self.aux_color_offset),
-                                            color=(255, 255, 255),
-                                            radius=self.color_icon_radius,
-                                            thickness=cv.FILLED)
+            # White Color
+            self.white_icon_pos = landmark_list[6]
+            image_debug = cv.circle(image_debug,
+                                    self.white_icon_pos,
+                                    color=(255, 255, 255),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
 
-                    # Brown Color
-                    image_debug = cv.circle(image_debug,
-                                            (x_hand_c + self.aux_color_offset, y_hand_c - self.aux_color_offset),
-                                            color=(0, 51, 102),
-                                            radius=self.color_icon_radius,
-                                            thickness=cv.FILLED)
+            # Brown Color
+            self.brown_icon_pos = landmark_list[7]
+            image_debug = cv.circle(image_debug,
+                                    self.brown_icon_pos,
+                                    color=(0, 51, 102),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
 
-                    # Black Color
-                    image_debug = cv.circle(image_debug,
-                                            (x_hand_c - self.aux_color_offset, y_hand_c - self.aux_color_offset),
-                                            color=(0, 0, 0),
-                                            radius=self.color_icon_radius,
-                                            thickness=cv.FILLED)
+            # Black Color
+            self.black_icon_pos = landmark_list[8]
+            image_debug = cv.circle(image_debug,
+                                    self.black_icon_pos,
+                                    color=(0, 0, 0),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
 
             # Paste image of color wheel at this location
             s = 50
 
-            # Check if in image bounds
             if not (x_hand_c - s < 0 or x_hand_c + s > w or y_hand_c - s < 0 or y_hand_c + s > h):
                 color_mask = np.zeros_like(image_debug)
                 transparency_mask = np.zeros_like(image_debug)
@@ -215,6 +215,39 @@ class Interpreter():
                 color_mask[y_hand_c - s:y_hand_c + s, x_hand_c - s:x_hand_c + s, :] = self.hsv_icon
                 transparency_mask[y_hand_c - s:y_hand_c + s, x_hand_c - s:x_hand_c + s, :] = self.mask_icon
                 image_debug[transparency_mask == 1] = color_mask[transparency_mask == 1]
+
+            # Draw UI buttons for various line types
+            # Sketch Icon
+            self.sketch_icon_pos = landmark_list[1]
+            image_debug = cv.circle(image_debug,
+                                    self.sketch_icon_pos,
+                                    color=(50, 50, 50),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
+
+            # Line icon
+            self.line_icon_pos = landmark_list[2]
+            image_debug = cv.circle(image_debug,
+                                    self.line_icon_pos,
+                                    color=(50, 50, 50),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
+
+            # Rect Icon
+            self.rect_icon_pos = landmark_list[3]
+            image_debug = cv.circle(image_debug,
+                                    self.rect_icon_pos,
+                                    color=(50, 50, 50),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
+
+            # Circle Icon
+            self.circle_icon_pos = landmark_list[4]
+            image_debug = cv.circle(image_debug,
+                                    self.circle_icon_pos,
+                                    color=(50, 50, 50),
+                                    radius=self.icon_radius,
+                                    thickness=cv.FILLED)
 
         # Detect if a line segment is starting to be drawn
         if hand_sign_id == 3 and self.past_gestures.count(3) > self.num_past_gestures - 4:
@@ -267,17 +300,16 @@ class Interpreter():
             x_hand = int(round(((x_hand_1 + x_hand_2 + x_hand_3) / 3), 0))
             y_hand = int(round(((y_hand_1 + y_hand_2 + y_hand_3) / 3), 0))
 
-
             # Calculate the distance between the two points
             d = math.sqrt((((x_point - x_hand) ** 2) + ((y_point - y_hand) ** 2)))
 
-            if d < 140:
+            if d < 300:
                 # Draw a line between the center of the hand and the pointer finger
                 image_debug = cv.line(image_debug, color=self.current_color, pt1=(x_hand, y_hand),
                                       pt2=(x_point, y_point), thickness=12)
 
             # If the point is less than 50 pixels away from the center of the hand
-            if d < 70:
+            if d < 50:
                 # Calculate the angle between the two
                 theta = math.atan2((x_point - x_hand), (y_point - y_hand))
                 theta = math.degrees(theta) + 180   # Normalize to 0-360 degrees
@@ -296,20 +328,52 @@ class Interpreter():
             # Check if any of the auxiliary colors are being selected
             else:
                 # Calculate Geometric distance to black, white, and brown pixels
-                d_black = math.sqrt((((x_point - x_hand + self.aux_color_offset) ** 2) +
-                                     ((y_point - y_hand + self.aux_color_offset) ** 2)))
-                d_white = math.sqrt((((x_point - x_hand) ** 2) +
-                                     ((y_point - y_hand + self.aux_color_offset) ** 2)))
-                d_brown = math.sqrt((((x_point - x_hand - self.aux_color_offset) ** 2) +
-                                     ((y_point - y_hand + self.aux_color_offset) ** 2)))
+                d_black = math.sqrt((((x_point - self.black_icon_pos[0]) ** 2) +
+                                     ((y_point - self.black_icon_pos[1]) ** 2)))
+                d_white = math.sqrt((((x_point - self.white_icon_pos[0]) ** 2) +
+                                     ((y_point - self.white_icon_pos[1]) ** 2)))
+                d_brown = math.sqrt((((x_point - self.brown_icon_pos[0]) ** 2) +
+                                     ((y_point - self.brown_icon_pos[1]) ** 2)))
+                d_sketch = math.sqrt((((x_point - self.sketch_icon_pos[0]) ** 2) +
+                                     ((y_point - self.sketch_icon_pos[1]) ** 2)))
+                d_line = math.sqrt((((x_point - self.line_icon_pos[0]) ** 2) +
+                                     ((y_point - self.line_icon_pos[1]) ** 2)))
+                d_rect = math.sqrt((((x_point - self.rect_icon_pos[0]) ** 2) +
+                                     ((y_point - self.rect_icon_pos[1]) ** 2)))
+                d_circle = math.sqrt((((x_point - self.circle_icon_pos[0]) ** 2) +
+                                    ((y_point - self.circle_icon_pos[1]) ** 2)))
+
+                text_offset = 50
 
                 # Select the color
-                if d_black < self.color_icon_radius:
+                if d_black < self.icon_radius:
                     self.current_color = (0, 0, 0)
-                if d_white < self.color_icon_radius:
+                if d_white < self.icon_radius:
                     self.current_color = (255, 255, 255)
-                if d_brown < self.color_icon_radius:
+                if d_brown < self.icon_radius:
                     self.current_color = (0, 51, 102)
+
+                # Change the sketch type
+                if d_sketch < self.icon_radius:
+                    self.drawing_mode = 'sketch'
+                    image_debug = cv.putText(image_debug, 'Sketch',
+                                             (self.sketch_icon_pos[0] + text_offset, self.sketch_icon_pos[1]),
+                                             cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
+                if d_line < self.icon_radius:
+                    self.drawing_mode = 'line'
+                    image_debug = cv.putText(image_debug, 'Line',
+                                             (self.line_icon_pos[0] + text_offset, self.line_icon_pos[1]),
+                                             cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
+                if d_rect < self.icon_radius:
+                    self.drawing_mode = 'rect'
+                    image_debug = cv.putText(image_debug, 'Rectangle',
+                                             (self.rect_icon_pos[0] + text_offset, self.rect_icon_pos[1]),
+                                             cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
+                if d_circle < self.icon_radius:
+                    self.drawing_mode = 'circle'
+                    image_debug = cv.putText(image_debug, 'Circle',
+                                             (self.circle_icon_pos[0] + text_offset, self.circle_icon_pos[1]),
+                                             cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
 
         # Enter Shape Creation mode if both hands are pinching
         elif (hand_gesture_list[0] == 3 and hand_gesture_list[1] == 3):
@@ -448,6 +512,22 @@ class Interpreter():
         self.drawing_line_seg = False
         self.current_line_segment = []
 
+        # Line Drawing Data
+        self.drawing_shape = False
+        self.current_line = []
+        self.lines = []
+        self.line_colors = []
+
+        # Rectangle Drawing Data
+        self.current_rect = []
+        self.rects = []
+        self.rect_colors = []
+
+        # Circle Drawing Data
+        self.current_circle = []
+        self.circles = []
+        self.circle_colors = []
+
     def hsv_to_rgb(self, h, s, v):
         """
         "Given a hue, saturation, and value, return the corresponding red, green, and blue values."
@@ -573,18 +653,6 @@ class Interpreter():
                 keyCode = cv.waitKey(1)
                 if (keyCode & 0xFF) == ord("c"):
                     self.clear_drawing()
-
-                if (keyCode & 0xFF) == ord("w"):
-                    self.drawing_mode = 'sketch'
-
-                if (keyCode & 0xFF) == ord("e"):
-                    self.drawing_mode = 'line'
-
-                if (keyCode & 0xFF) == ord("r"):
-                    self.drawing_mode = 'rect'
-
-                if (keyCode & 0xFF) == ord("t"):
-                    self.drawing_mode = 'circle'
 
 if __name__ == '__main__':
     i = Interpreter()

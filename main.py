@@ -34,15 +34,31 @@ class Interpreter():
             self.keypoint_classifier_labels = csv.reader(f)
             self.keypoint_classifier_labels = [row[0] for row in self.keypoint_classifier_labels]
 
-        # Start a video capture from the inbuilt webcam
-        self.circles = []
+        # Drawing Mode
+        self.drawing_mode = 'sketch'
+        self.drawing_modes = ['sketch', 'line', 'rect', 'circle']
 
         # Line segment drawing data
         self.drawing_line_seg = False
         self.current_line_segment = []
         self.line_segments = []
         self.line_segment_colors = []
-        self.num_line_segs = 0
+
+        # Line Drawing Data
+        self.drawing_shape = False
+        self.current_line = []
+        self.lines = []
+        self.line_colors = []
+
+        # Rectangle Drawing Data
+        self.current_rect = []
+        self.rects = []
+        self.rect_colors = []
+
+        # Circle Drawing Data
+        self.current_circle = []
+        self.circles = []
+        self.circle_colors = []
 
         # The list of gestures in the past
         self.past_gestures = []
@@ -116,19 +132,22 @@ class Interpreter():
                 img_debug = cv.circle(img_debug, (x_c, y_c), 12, (0, 255, 255), thickness=2)
                 img_debug = cv.circle(img_debug, (x_c, y_c), 3, (0, 255, 255), thickness=1)
 
-                # Detect single hand gestures
-                img_debug = self.single_hand_gesture_handler(hand_sign_id, landmark_list, img_debug, x_c, y_c)
-
             # If there are 2 hands in the image
             if len(hand_gesture_list) == 2:
                 img_debug = self.double_hand_gesture_handler(hand_gesture_list, hand_landmarks_list, img_debug)
+
+
+            # If there is no two-handed gesture detected
+            for i, landmarks in enumerate(hand_landmarks_list):
+                # Detect single hand gestures
+                img_debug = self.single_hand_gesture_handler(hand_gesture_list[i], landmarks, img_debug)
 
         # Draw the collection of shapes
         img_debug = self.draw_shapes(img_debug)
 
         return img_debug
 
-    def single_hand_gesture_handler(self, hand_sign_id, landmark_list, img_debug, x_c, y_c):
+    def single_hand_gesture_handler(self, hand_sign_id, landmark_list, img_debug):
         """
         Interpret the gesture being made by the hand, and take the appropriate action
 
@@ -142,6 +161,10 @@ class Interpreter():
         # Get image information
         image_debug = img_debug.copy()
         h, w, c = image_debug.shape
+        x_1, y_1 = landmark_list[4]
+        x_2, y_2 = landmark_list[8]
+        x_c = int(round(((x_1 + x_2) / 2), 0))
+        y_c = int(round(((y_1 + y_2) / 2), 0))
 
         # If the hand is making a forward facing palm gesture
         if hand_sign_id == 0:
@@ -195,22 +218,16 @@ class Interpreter():
 
         # Detect if a line segment is starting to be drawn
         if hand_sign_id == 3 and self.past_gestures.count(3) > self.num_past_gestures - 4:
-            self.drawing_line_seg = True
+            if self.drawing_mode == 'sketch':
+                self.drawing_line_seg = True
 
-        # If there is currently a line segment being drawn
-        if self.drawing_line_seg:
-            # Append the point to the set of points included in this line segment
-            self.current_line_segment.append((x_c, y_c))
+            # If there is currently a line segment being drawn
+            if self.drawing_line_seg:
+                # Append the point to the set of points included in this line segment
+                self.current_line_segment.append((x_c, y_c))
 
-            # If the line segment is finished being drawn
-            if self.past_gestures.count(3) <= self.num_past_gestures - 4:
-                # Reset the collection of line segments and all associated data
-                self.current_line_segment = self.current_line_segment[:len(self.current_line_segment) - 6]
-                self.line_segments.append(self.current_line_segment)
-                self.current_line_segment = []
-                self.line_segment_colors.append(self.current_color)
-                self.num_line_segs += 1
-                self.drawing_line_seg = False
+        elif self.past_gestures.count(3) <= self.num_past_gestures - 4:
+            self.collect_line_segment()
 
         return image_debug
 
@@ -231,9 +248,9 @@ class Interpreter():
 
         # If right or left hand is pointing while other is showing palm
         #   Open the Color Selector dialog
-        if (hand_gesture_list[0] == 0 and hand_gesture_list[1] == 4) \
-                or (hand_gesture_list[0] == 4 and hand_gesture_list[1] == 0):
-
+        if ((hand_gesture_list[0] == 0 and hand_gesture_list[1] == 4)\
+                or (hand_gesture_list[0] == 4 and hand_gesture_list[1] == 0))\
+                and not self.drawing_shape:
             # Check which hand is pointing
             if hand_gesture_list[0] == 4:
                 pointer_index = 0
@@ -250,14 +267,17 @@ class Interpreter():
             x_hand = int(round(((x_hand_1 + x_hand_2 + x_hand_3) / 3), 0))
             y_hand = int(round(((y_hand_1 + y_hand_2 + y_hand_3) / 3), 0))
 
-            # Draw a line between the center of the hand and the pointer finger
-            image_debug = cv.line(image_debug, color=self.current_color, pt1=(x_hand, y_hand), pt2=(x_point, y_point), thickness=12)
 
             # Calculate the distance between the two points
             d = math.sqrt((((x_point - x_hand) ** 2) + ((y_point - y_hand) ** 2)))
 
+            if d < 140:
+                # Draw a line between the center of the hand and the pointer finger
+                image_debug = cv.line(image_debug, color=self.current_color, pt1=(x_hand, y_hand),
+                                      pt2=(x_point, y_point), thickness=12)
+
             # If the point is less than 50 pixels away from the center of the hand
-            if d < 50:
+            if d < 70:
                 # Calculate the angle between the two
                 theta = math.atan2((x_point - x_hand), (y_point - y_hand))
                 theta = math.degrees(theta) + 180   # Normalize to 0-360 degrees
@@ -291,15 +311,82 @@ class Interpreter():
                 if d_brown < self.color_icon_radius:
                     self.current_color = (0, 51, 102)
 
-        # Enter Shape Creation mode if
+        # Enter Shape Creation mode if both hands are pinching
         elif (hand_gesture_list[0] == 3 and hand_gesture_list[1] == 3):
-            image_debug = cv.circle(image_debug, (800, 800), 50, (255, 0, 0))
+            # Centerpoint between thumb and forefinger (hand 1)
+            x_1, y_1 = landmark_list[0][4]
+            x_2, y_2 = landmark_list[0][8]
+            x_c_1 = int(round(((x_1 + x_2) / 2), 0))
+            y_c_1 = int(round(((y_1 + y_2) / 2), 0))
 
+            # Centerpoint between thumb and forefinger (hand 2)
+            x_1, y_1 = landmark_list[1][4]
+            x_2, y_2 = landmark_list[1][8]
+            x_c_2 = int(round(((x_1 + x_2) / 2), 0))
+            y_c_2 = int(round(((y_1 + y_2) / 2), 0))
+
+            # If the drawing is in line mode
+            if self.drawing_mode == 'line':
+                self.drawing_shape = True
+
+                # Set the current line
+                self.current_line = [(x_c_1, y_c_1), (x_c_2, y_c_2)]
+
+            # If the drawing is in rectangle mode
+            if self.drawing_mode == 'rect':
+
+                self.drawing_shape = True
+
+                # Set the current rectangle
+                self.current_rect = [(x_c_1, y_c_1), (x_c_2, y_c_2)]
+
+            # If the drawing is in rectangle mode
+            if self.drawing_mode == 'circle':
+                self.drawing_shape = True
+
+                circle_center = ((x_c_2 + x_c_1)//2, (y_c_2 + y_c_1)//2)
+
+                circle_radius = int(math.sqrt((x_c_2 - x_c_1)**2 + (y_c_2 - y_c_1)**2)//2)
+
+                # Set the current rectangle
+                self.current_circle = [circle_center, circle_radius]
+
+        # Exit shape creation mode if neither hand is pinching
+        elif (((hand_gesture_list[0] == 3 and hand_gesture_list[1] != 3)
+              or (hand_gesture_list[0] != 3 and hand_gesture_list[1] == 3) \
+              or (hand_gesture_list[0] != 3 and hand_gesture_list[1] != 3)) \
+              and self.drawing_shape):
+            self.drawing_shape = False
+            self.collect_shape()
+
+        # Clear the screen if both gestures are detected as middle fingers
         elif (hand_gesture_list[0] == 7 and hand_gesture_list[1] == 7):
             if self.past_gestures.count(7) == len(self.past_gestures):
                 self.clear_drawing()
 
         return image_debug
+
+    def collect_shape(self):
+        if self.drawing_mode == 'line':
+            self.lines.append(self.current_line)
+            self.line_colors.append(self.current_color)
+            self.current_line = []
+        if self.drawing_mode == 'rect':
+            self.rects.append(self.current_rect)
+            self.rect_colors.append(self.current_color)
+            self.current_rect = []
+        if self.drawing_mode == 'circle':
+            self.circles.append(self.current_circle)
+            self.circle_colors.append(self.current_color)
+            self.current_circle = []
+
+    def collect_line_segment(self):
+        # Reset the collection of line segments and all associated data
+        self.current_line_segment = self.current_line_segment[:len(self.current_line_segment) - 6]
+        self.line_segments.append(self.current_line_segment)
+        self.current_line_segment = []
+        self.line_segment_colors.append(self.current_color)
+        self.drawing_line_seg = False
 
     def draw_shapes(self, img_debug):
         """
@@ -313,15 +400,45 @@ class Interpreter():
         # Draw all other line segments
         for i, line_segment in enumerate(self.line_segments):
             # For each point in the set of points
-            for j, point in enumerate(line_segment):
+            for ii, point in enumerate(line_segment):
 
-                if j < len(line_segment) - 1 and len(line_segment) > 2:
-                    cv.line(image_debug, point, line_segment[j + 1], self.line_segment_colors[i], thickness=10)
+                if ii < len(line_segment) - 1 and len(line_segment) > 2:
+                    cv.line(image_debug, point, line_segment[ii + 1], self.line_segment_colors[i], thickness=10)
 
         # Draw current line segment
         for i, point in enumerate(self.current_line_segment):
             if i < len(self.current_line_segment) - 1 and len(self.current_line_segment) > 2:
                 cv.line(image_debug, point, self.current_line_segment[i + 1], self.current_color, thickness=10)
+
+        # Draw the current line if there is one
+        if self.current_line != []:
+            image_debug = cv.line(image_debug, self.current_line[0], self.current_line[1], self.current_color, thickness=10)
+
+        # Draw the set of all lines
+        if self.lines != []:
+            for i, line in enumerate(self.lines):
+                image_debug = cv.line(image_debug, line[0], line[1], self.line_colors[i], thickness=10)
+
+        # Draw the current rect if there is one
+        if self.current_rect != []:
+            image_debug = cv.rectangle(image_debug, self.current_rect[0], self.current_rect[1], self.current_color,
+                                  thickness=10)
+
+        # Draw the set of all rects
+        if self.rects != []:
+            for i, rect in enumerate(self.rects):
+                image_debug = cv.rectangle(image_debug, rect[0], rect[1], self.rect_colors[i], thickness=10)
+
+        # Draw the current circle if there is one
+        if self.current_circle != []:
+            image_debug = cv.circle(image_debug, self.current_circle[0], self.current_circle[1], self.current_color,
+                                       thickness=10)
+
+        # Draw the set of all circles
+        if self.circles != []:
+            for i, circle in enumerate(self.circles):
+                image_debug = cv.circle(image_debug, circle[0], circle[1], self.circle_colors[i],
+                                        thickness=10)
 
         return image_debug
 
@@ -330,7 +447,6 @@ class Interpreter():
         self.line_segments = []
         self.drawing_line_seg = False
         self.current_line_segment = []
-        self.num_line_segs = 0
 
     def hsv_to_rgb(self, h, s, v):
         """
@@ -457,6 +573,18 @@ class Interpreter():
                 keyCode = cv.waitKey(1)
                 if (keyCode & 0xFF) == ord("c"):
                     self.clear_drawing()
+
+                if (keyCode & 0xFF) == ord("w"):
+                    self.drawing_mode = 'sketch'
+
+                if (keyCode & 0xFF) == ord("e"):
+                    self.drawing_mode = 'line'
+
+                if (keyCode & 0xFF) == ord("r"):
+                    self.drawing_mode = 'rect'
+
+                if (keyCode & 0xFF) == ord("t"):
+                    self.drawing_mode = 'circle'
 
 if __name__ == '__main__':
     i = Interpreter()

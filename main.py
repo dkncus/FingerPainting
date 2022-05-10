@@ -6,6 +6,14 @@ import itertools
 import copy
 import math
 
+'''
+NOTES
+
+- Fuck you to Clear Screen
+- Voice detection to give the answer
+
+'''
+
 # Gesture Tracking Models
 from model import KeyPointClassifier
 from model import PointHistoryClassifier
@@ -75,11 +83,12 @@ class Interpreter():
         # Get the height, width, and # of image channels
         h, w, c = img_debug.shape
 
-        # print(results.multi_hand_landmarks)
+        # The gesture of each hand
+        hand_gesture_list = []
+        hand_landmarks_list = []
+
+        # If there are hands detected
         if results.multi_hand_landmarks:
-            # The gesture of each hand
-            hand_gesture_list = []
-            hand_landmarks_list = []
 
             # For each hand detected in the image
             for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
@@ -114,6 +123,7 @@ class Interpreter():
             if len(hand_gesture_list) == 2:
                 img_debug = self.double_hand_gesture_handler(hand_gesture_list, hand_landmarks_list, img_debug)
 
+        # Draw the collection of shapes
         img_debug = self.draw_shapes(img_debug)
 
         return img_debug
@@ -281,6 +291,14 @@ class Interpreter():
                 if d_brown < self.color_icon_radius:
                     self.current_color = (0, 51, 102)
 
+        # Enter Shape Creation mode if
+        elif (hand_gesture_list[0] == 3 and hand_gesture_list[1] == 3):
+            image_debug = cv.circle(image_debug, (800, 800), 50, (255, 0, 0))
+
+        elif (hand_gesture_list[0] == 7 and hand_gesture_list[1] == 7):
+            if self.past_gestures.count(7) == len(self.past_gestures):
+                self.clear_drawing()
+
         return image_debug
 
     def draw_shapes(self, img_debug):
@@ -438,11 +456,7 @@ class Interpreter():
 
                 keyCode = cv.waitKey(1)
                 if (keyCode & 0xFF) == ord("c"):
-                    self.line_segment_colors = []
-                    self.line_segments = []
-                    self.drawing_line_seg = False
-                    self.current_line_segment = []
-                    self.num_line_segs = 0
+                    self.clear_drawing()
 
 if __name__ == '__main__':
     i = Interpreter()

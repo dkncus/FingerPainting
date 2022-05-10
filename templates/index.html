@@ -1,6 +1,11 @@
-<html>
-<head>
-  <link rel="stylesheet" href="static/styles/stylesheet.css">
-</head>
 <body>
-<img src="{{ url_for('video_feed') }}" width="100%" class="center">
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8  offset-lg-2">
+            <h3 class="mt-5">Finger Painting!</h3>
+            <img src="{{ url_for('video_feed') }}" width="100%">
+        </div>
+    </div>
+</div>
+<input type="submit" name="clear_button" value="Clear Canvas">
+</body>

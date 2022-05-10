@@ -4,3 +4,8 @@ gesture_model/__pycache__/
 gesture_model/keypoint_classifier/__pycache__/
 gesture_model/point_history_classifier/__pycache__/
 .DS_Store
+__pycache__/
+model/__pycache__/
+model/keypoint_classifier/__pycache__/
+model/point_history_classifier/__pycache__/
+

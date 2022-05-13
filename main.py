@@ -534,28 +534,28 @@ class Interpreter():
                     d_circle = math.sqrt((((x_point - self.circle_icon_pos[0]) ** 2) +
                                         ((y_point - self.circle_icon_pos[1]) ** 2)))
 
-                    text_offset = 30
+                    text_offset = 40
 
                     # Change the sketch type
                     if d_sketch < self.icon_radius:
                         self.drawing_mode = 'sketch'
                         image_debug = cv.putText(image_debug, 'Sketch',
-                                                 (self.sketch_icon_pos[0] + text_offset, self.sketch_icon_pos[1]),
+                                                 (self.select_icon_pos[0] + text_offset, int(self.select_icon_pos[1] + text_offset * 1.5)),
                                                  cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
                     if d_line < self.icon_radius:
                         self.drawing_mode = 'line'
                         image_debug = cv.putText(image_debug, 'Line',
-                                                 (self.line_icon_pos[0] + text_offset, self.line_icon_pos[1]),
+                                                 (self.select_icon_pos[0] + text_offset, int(self.select_icon_pos[1] + text_offset * 1.5)),
                                                  cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
                     if d_rect < self.icon_radius:
                         self.drawing_mode = 'rect'
                         image_debug = cv.putText(image_debug, 'Rectangle',
-                                                 (self.rect_icon_pos[0] + text_offset - 200, self.rect_icon_pos[1]),
+                                                 (self.select_icon_pos[0] + text_offset, int(self.select_icon_pos[1] + text_offset * 1.5)),
                                                  cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
                     if d_circle < self.icon_radius:
                         self.drawing_mode = 'circle'
                         image_debug = cv.putText(image_debug, 'Circle',
-                                                 (self.circle_icon_pos[0] + text_offset, self.circle_icon_pos[1]),
+                                                 (self.select_icon_pos[0] + text_offset, int(self.select_icon_pos[1] + text_offset * 1.5)),
                                                  cv.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv.LINE_AA)
 
         # Enter Shape Creation mode if both hands are pinching
@@ -651,42 +651,42 @@ class Interpreter():
             for ii, point in enumerate(line_segment):
 
                 if ii < len(line_segment) - 1 and len(line_segment) > 2:
-                    cv.line(image_debug, point, line_segment[ii + 1], self.sketch_colors[i], thickness=10)
+                    cv.line(image_debug, point, line_segment[ii + 1], self.sketch_colors[i], thickness=10, lineType=cv.LINE_AA)
 
         # Draw current line segment
         for i, point in enumerate(self.current_sketch):
             if i < len(self.current_sketch) - 1 and len(self.current_sketch) > 2:
-                cv.line(image_debug, point, self.current_sketch[i + 1], self.current_color, thickness=10)
+                cv.line(image_debug, point, self.current_sketch[i + 1], self.current_color, thickness=10, lineType=cv.LINE_AA)
 
         # Draw the current line if there is one
         if self.current_line != []:
-            image_debug = cv.line(image_debug, self.current_line[0], self.current_line[1], self.current_color, thickness=10)
+            image_debug = cv.line(image_debug, self.current_line[0], self.current_line[1], self.current_color, thickness=10, lineType=cv.LINE_AA)
 
         # Draw the set of all lines
         if self.lines != []:
             for i, line in enumerate(self.lines):
-                image_debug = cv.line(image_debug, line[0], line[1], self.line_colors[i], thickness=10)
+                image_debug = cv.line(image_debug, line[0], line[1], self.line_colors[i], thickness=10, lineType=cv.LINE_AA)
 
         # Draw the set of all rects
         if self.rects != []:
             for i, rect in enumerate(self.rects):
-                image_debug = cv.rectangle(image_debug, rect[0], rect[1], self.rect_colors[i], thickness=10)
+                image_debug = cv.rectangle(image_debug, rect[0], rect[1], self.rect_colors[i], thickness=10, lineType=cv.LINE_AA)
 
         # Draw the current rect if there is one
         if self.current_rect != []:
             image_debug = cv.rectangle(image_debug, self.current_rect[0], self.current_rect[1], self.current_color,
-                                  thickness=10)
+                                  thickness=10, lineType=cv.LINE_AA)
 
         # Draw the set of all circles
         if self.circles != []:
             for i, circle in enumerate(self.circles):
                 image_debug = cv.circle(image_debug, circle[0], circle[1], self.circle_colors[i],
-                                        thickness=10)
+                                        thickness=10, lineType=cv.LINE_AA)
 
         # Draw the current circle if there is one
         if self.current_circle != []:
             image_debug = cv.circle(image_debug, self.current_circle[0], self.current_circle[1], self.current_color,
-                                       thickness=10)
+                                       thickness=10, lineType=cv.LINE_AA)
 
         return image_debug
 

@@ -7,8 +7,7 @@ import copy
 import math
 
 # Gesture Tracking Models
-from model import KeyPointClassifier
-from model import PointHistoryClassifier
+from gesture_model.model import KeyPointClassifier
 from google.protobuf.json_format import MessageToDict
 
 class Interpreter():
@@ -23,7 +22,7 @@ class Interpreter():
 
         # Hand Keypoint Gesture Detection Models
         self.keypoint_classifier = KeyPointClassifier()
-        with open('model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
+        with open('gesture_model/model/keypoint_classifier/keypoint_classifier_label.csv', encoding='utf-8-sig') as f:
             self.keypoint_classifier_labels = csv.reader(f)
             self.keypoint_classifier_labels = [row[0] for row in self.keypoint_classifier_labels]
 
@@ -74,8 +73,8 @@ class Interpreter():
         self.circle_icon_pos = (0, 0)
 
         # Icons drawn on the screen when open palm is shown
-        self.hsv_icon = cv.imread('assets/hsv_icons/hsv_icon_color.png')
-        self.mask_icon = cv.imread('assets/hsv_icons/hsv_icon_mask.png')
+        self.hsv_icon = cv.imread('gui_assets/hsv_icons/hsv_icon_color.png')
+        self.mask_icon = cv.imread('gui_assets/hsv_icons/hsv_icon_mask.png')
         self.mask_icon[self.mask_icon > 100] = 255
         self.mask_icon[self.mask_icon < 100] = 0
         self.mask_icon = 1 - (self.mask_icon / 255).astype(np.uint8)
@@ -159,9 +158,6 @@ class Interpreter():
                 else:
                     self.pallate_open = False
                 self.d_select = self.icon_radius * 3 + 1
-
-
-
 
             # If there is no two-handed gesture detected
             for i, landmarks in enumerate(hand_landmarks_list):
@@ -614,7 +610,6 @@ class Interpreter():
         return image_debug
 
     def collect_shape(self):
-
         if self.drawing_mode == 'line':
             self.lines.append(self.current_line)
             self.line_colors.append(self.current_color)
@@ -647,11 +642,13 @@ class Interpreter():
 
         # Draw all other line segments
         for i, line_segment in enumerate(self.sketches):
+            # line_segment = line_segment[::2]
+
             # For each point in the set of points
             for ii, point in enumerate(line_segment):
-
                 if ii < len(line_segment) - 1 and len(line_segment) > 2:
                     cv.line(image_debug, point, line_segment[ii + 1], self.sketch_colors[i], thickness=10, lineType=cv.LINE_AA)
+                    cv.circle(image_debug, point, color=(0, 255, 0), radius=5, thickness=10, lineType=cv.LINE_AA)
 
         # Draw current line segment
         for i, point in enumerate(self.current_sketch):
@@ -751,31 +748,6 @@ class Interpreter():
         if i == 3: return (p, q, v)
         if i == 4: return (t, p, v)
         if i == 5: return (v, p, q)
-
-    def calc_bounding_rect(self, image, landmarks):
-        image_width, image_height = image.shape[1], image.shape[0]
-
-        landmark_array = np.empty((0, 2), int)
-
-        for _, landmark in enumerate(landmarks.landmark):
-            landmark_x = min(int(landmark.x * image_width), image_width - 1)
-            landmark_y = min(int(landmark.y * image_height), image_height - 1)
-
-            landmark_point = [np.array((landmark_x, landmark_y))]
-
-            landmark_array = np.append(landmark_array, landmark_point, axis=0)
-
-        x, y, w, h = cv.boundingRect(landmark_array)
-
-        return [x, y, x + w, y + h]
-
-    def draw_bounding_rect(self, use_brect, image, brect):
-        # Draw the image using the bounding rectangle
-        if use_brect:
-            cv.rectangle(image, (brect[0], brect[1]), (brect[2], brect[3]),
-                         (0, 0, 0), 1)
-
-        return image
 
     def calc_landmark_list(self, image, landmarks):
         """

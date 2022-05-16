@@ -1,0 +1,1 @@
+from gesture_model.model.keypoint_classifier.keypoint_classifier import KeyPointClassifier

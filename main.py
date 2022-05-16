@@ -642,13 +642,13 @@ class Interpreter():
 
         # Draw all other line segments
         for i, line_segment in enumerate(self.sketches):
-            # line_segment = line_segment[::2]
+            line_segment = line_segment[::2]
 
             # For each point in the set of points
             for ii, point in enumerate(line_segment):
                 if ii < len(line_segment) - 1 and len(line_segment) > 2:
                     cv.line(image_debug, point, line_segment[ii + 1], self.sketch_colors[i], thickness=10, lineType=cv.LINE_AA)
-                    cv.circle(image_debug, point, color=(0, 255, 0), radius=5, thickness=10, lineType=cv.LINE_AA)
+                    # cv.circle(image_debug, point, color=(0, 255, 0), radius=5, thickness=10, lineType=cv.LINE_AA)
 
         # Draw current line segment
         for i, point in enumerate(self.current_sketch):

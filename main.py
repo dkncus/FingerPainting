@@ -122,7 +122,10 @@ class Interpreter():
 
                 # Normalize the landmark list and detect hand gesture
                 pre_processed_landmark_list = self.pre_process_landmark(landmark_list)
-                hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
+                try:
+                    hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
+                except:
+                    break
                 hand_gesture_list.append(hand_sign_id)
                 hand_landmarks_list.append(landmark_list)
 

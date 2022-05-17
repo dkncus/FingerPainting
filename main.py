@@ -5,10 +5,17 @@ import csv
 import itertools
 import copy
 import math
+import time
 
 # Gesture Tracking Models
 from gesture_model.model import KeyPointClassifier
 from google.protobuf.json_format import MessageToDict
+
+import pygame.math
+VEC = pygame.math.Vector2
+
+
+from physics_data import Ball
 
 class Interpreter():
     def __init__(self):
@@ -27,7 +34,7 @@ class Interpreter():
             self.keypoint_classifier_labels = [row[0] for row in self.keypoint_classifier_labels]
 
         # Drawing Mode
-        self.drawing_mode = 'sketch'
+        self.drawing_mode = 'circle'
         self.drawing_modes = ['sketch', 'line', 'rect', 'circle']
         self.drawing_hand = 'Left'
 
@@ -72,6 +79,12 @@ class Interpreter():
         self.rect_icon_pos = (0, 0)
         self.circle_icon_pos = (0, 0)
 
+        # PHYSICS
+        self.num_physics_circles = 0
+
+        # FPS Counter
+        self.prev_frame_time = time.time()
+
         # Icons drawn on the screen when open palm is shown
         self.hsv_icon = cv.imread('gui_assets/hsv_icons/hsv_icon_color.png')
         self.mask_icon = cv.imread('gui_assets/hsv_icons/hsv_icon_mask.png')
@@ -109,6 +122,7 @@ class Interpreter():
         hand_gesture_list = []
         hand_landmarks_list = []
         handedness_list = []
+        error = False
 
         # If there are hands detected
         if results.multi_hand_landmarks:
@@ -125,7 +139,9 @@ class Interpreter():
                 try:
                     hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
                 except:
+                    error = True
                     break
+
                 hand_gesture_list.append(hand_sign_id)
                 hand_landmarks_list.append(landmark_list)
 
@@ -144,31 +160,51 @@ class Interpreter():
                 # Wireframe hand drawing
                 self.mpDraw.draw_landmarks(img_debug, hand_landmarks, self.mpHands.HAND_CONNECTIONS)
 
-
-
-            # If there are 2 hands in the image
-            if len(hand_gesture_list) == 2:
-                img_debug = self.double_hand_gesture_handler(hand_gesture_list, hand_landmarks_list, img_debug)
-                if hand_gesture_list[0] != 0 and hand_gesture_list[1] != 0:
-                    self.pallate_open = False
-            else:
-                if hand_gesture_list[0] == 0 and handedness_list[0] != self.pallate_hand:
-                    self.pallate_open = False
-                    if self.pallate_hand == 'Right':
-                        self.pallate_hand = 'Left'
-                    elif self.pallate_hand == 'Left':
-                        self.pallate_hand = 'Right'
+            if not error:
+                # If there are 2 hands in the image
+                if len(hand_gesture_list) == 2:
+                    img_debug = self.double_hand_gesture_handler(hand_gesture_list, hand_landmarks_list, img_debug)
+                    if hand_gesture_list[0] != 0 and hand_gesture_list[1] != 0:
+                        self.pallate_open = False
                 else:
-                    self.pallate_open = False
-                self.d_select = self.icon_radius * 3 + 1
+                    if hand_gesture_list[0] == 0 and handedness_list[0] != self.pallate_hand:
+                        self.pallate_open = False
+                        if self.pallate_hand == 'Right':
+                            self.pallate_hand = 'Left'
+                        elif self.pallate_hand == 'Left':
+                            self.pallate_hand = 'Right'
+                    else:
+                        self.pallate_open = False
+                    self.d_select = self.icon_radius * 3 + 1
 
-            # If there is no two-handed gesture detected
-            for i, landmarks in enumerate(hand_landmarks_list):
-                # Detect single hand gestures
-                img_debug = self.single_hand_gesture_handler(hand_gesture_list[i], landmarks, img_debug, handedness_list[i])
-
+                # If there is no two-handed gesture detected
+                for i, landmarks in enumerate(hand_landmarks_list):
+                    # Detect single hand gestures
+                    img_debug = self.single_hand_gesture_handler(hand_gesture_list[i], landmarks, img_debug, handedness_list[i])
+            else:
+                error = False
         # Draw the collection of shapes
         img_debug = self.draw_shapes(img_debug)
+
+        # PHYSICS #f
+        new_frame_time = time.time()
+        fps = 1 / (new_frame_time - self.prev_frame_time)
+        self.prev_frame_time = new_frame_time
+
+        if self.num_physics_circles < len(self.circles):
+            circle = self.circles[-1]
+            circle_color = self.circle_colors[-1]
+            print(circle)
+            pos = VEC(circle[0][0], circle[0][1])
+            radius = int(circle[1])
+            Ball(pos, radius, circle_color)
+            self.num_physics_circles += 1
+
+        for ball in Ball.instances:
+            ball.update_position(fps/800)
+            ball.update_pushout()
+            ball.update_collision(fps/800)
+            img_debug = ball.draw(img_debug)
 
         return img_debug
 
@@ -179,8 +215,6 @@ class Interpreter():
         :param hand_sign_id: The id of the hand sign that was detected
         :param landmark_list: a list of tuples containing the x and y coordinates of the 21 hand landmarks
         :param img_debug: The image that will be displayed to the user
-        :param x_c: x coordinate of the center of the palm
-        :param y_c: y coordinate of the center of the hand
         :return: The image_debug is being returned.
         """
         # Get image information
@@ -455,7 +489,7 @@ class Interpreter():
 
         # If right or left hand is pointing while other is showing palm
         #   Open the Color Selector dialog
-        if ((hand_gesture_list[0] == 0 and hand_gesture_list[1] == 4)\
+        if ((hand_gesture_list[0] == 0 and hand_gesture_list[1] == 4)
                 or (hand_gesture_list[0] == 4 and hand_gesture_list[1] == 0))\
                 and not self.drawing_shape:
             # Check which hand is pointing
@@ -599,8 +633,8 @@ class Interpreter():
 
         # Exit shape creation mode if neither hand is pinching
         elif (((hand_gesture_list[0] == 3 and hand_gesture_list[1] != 3)
-              or (hand_gesture_list[0] != 3 and hand_gesture_list[1] == 3) \
-              or (hand_gesture_list[0] != 3 and hand_gesture_list[1] != 3)) \
+              or (hand_gesture_list[0] != 3 and hand_gesture_list[1] == 3)
+              or (hand_gesture_list[0] != 3 and hand_gesture_list[1] != 3))
               and self.drawing_shape):
             self.drawing_shape = False
             self.collect_shape()
@@ -645,7 +679,7 @@ class Interpreter():
 
         # Draw all other line segments
         for i, line_segment in enumerate(self.sketches):
-            line_segment = line_segment[::2]
+            # line_segment = line_segment[::2]
 
             # For each point in the set of points
             for ii, point in enumerate(line_segment):
@@ -677,11 +711,11 @@ class Interpreter():
             image_debug = cv.rectangle(image_debug, self.current_rect[0], self.current_rect[1], self.current_color,
                                   thickness=10, lineType=cv.LINE_AA)
 
-        # Draw the set of all circles
-        if self.circles != []:
-            for i, circle in enumerate(self.circles):
-                image_debug = cv.circle(image_debug, circle[0], circle[1], self.circle_colors[i],
-                                        thickness=10, lineType=cv.LINE_AA)
+        # # Draw the set of all circles
+        # if self.circles != []:
+        #     for i, circle in enumerate(self.circles):
+        #         image_debug = cv.circle(image_debug, circle[0], circle[1], self.circle_colors[i],
+        #                                 thickness=10, lineType=cv.LINE_AA)
 
         # Draw the current circle if there is one
         if self.current_circle != []:
@@ -816,6 +850,8 @@ class Interpreter():
                 keyCode = cv.waitKey(1)
                 if (keyCode & 0xFF) == ord("c"):
                     self.clear_drawing()
+
+
 
 if __name__ == '__main__':
     i = Interpreter()

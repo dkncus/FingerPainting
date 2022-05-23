@@ -102,7 +102,6 @@ class Ball:
 
     def kill(self):
         __class__.instances.remove(self)
-        __class__.regions[self.region].remove(self)
         del self
 
 

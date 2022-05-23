@@ -5,6 +5,7 @@ import csv
 import itertools
 import copy
 import math
+from math import sqrt
 import time
 
 # Gesture Tracking Models
@@ -14,8 +15,9 @@ from google.protobuf.json_format import MessageToDict
 import pygame.math
 VEC = pygame.math.Vector2
 
-
-from physics_data import Ball
+dist = lambda pt1, pt2: float(sqrt((pt1[0] - pt2[0]) ** 2 + (pt1[1] - pt2[1]) ** 2))
+avgint = lambda a, b: float
+from physics_data import Ball, Line
 
 class Interpreter():
     def __init__(self):
@@ -34,7 +36,7 @@ class Interpreter():
             self.keypoint_classifier_labels = [row[0] for row in self.keypoint_classifier_labels]
 
         # Drawing Mode
-        self.drawing_mode = 'circle'
+        self.drawing_mode = 'sketch'
         self.drawing_modes = ['sketch', 'line', 'rect', 'circle']
         self.drawing_hand = 'Left'
 
@@ -81,6 +83,7 @@ class Interpreter():
 
         # PHYSICS
         self.num_physics_circles = 0
+        self.num_physics_lines = 0
 
         # FPS Counter
         self.prev_frame_time = time.time()
@@ -186,25 +189,31 @@ class Interpreter():
         # Draw the collection of shapes
         img_debug = self.draw_shapes(img_debug)
 
-        # PHYSICS #f
+        # PHYSICS #
         new_frame_time = time.time()
         fps = 1 / (new_frame_time - self.prev_frame_time)
         self.prev_frame_time = new_frame_time
 
-        if self.num_physics_circles < len(self.circles):
-            circle = self.circles[-1]
-            circle_color = self.circle_colors[-1]
-            print(circle)
-            pos = VEC(circle[0][0], circle[0][1])
-            radius = int(circle[1])
-            Ball(pos, radius, circle_color)
-            self.num_physics_circles += 1
+        # if self.num_physics_circles < len(self.circles):
+        #     circle = self.circles[-1]
+        #     circle_color = self.circle_colors[-1]
+        #     pos = VEC(circle[0][0], circle[0][1])
+        #     radius = int(circle[1])
+        #     Ball(pos, radius, circle_color)
+        #     self.num_physics_circles += 1
 
-        for ball in Ball.instances:
-            ball.update_position(fps/800)
-            ball.update_pushout()
-            ball.update_collision(fps/800)
-            img_debug = ball.draw(img_debug)
+        # if self.num_physics_lines < len(self.lines):
+        #     line = self.lines[-1]
+        #     line_color = self.line_colors[-1]
+        #     p1, p2 = VEC(line[0][0], line[0][1]), VEC(line[1][0], line[1][1])
+        #     Line(p1, p2, line_color)
+        #     self.num_physics_lines += 1
+
+        # for ball in Ball.instances:
+        #     ball.update_position(fps/800)
+        #     ball.update_pushout()
+        #     ball.update_collision(fps/800)
+        #     img_debug = ball.draw(img_debug)
 
         return img_debug
 
@@ -302,8 +311,7 @@ class Interpreter():
 
 
                 # Distance between the index finger base and pinky base
-                dist_across_hand = math.sqrt((((landmark_list[5][0] - landmark_list[17][0]) ** 2) +
-                                              ((landmark_list[5][1] - landmark_list[17][1]) ** 2)))
+                dist_across_hand = int(dist(landmark_list[5], landmark_list[17]))
                 self.hsv_icon_scale = int(dist_across_hand)
 
                 s = self.hsv_icon_scale
@@ -500,19 +508,14 @@ class Interpreter():
 
             # X, Y location of the pointer point
             x_point, y_point = landmark_list[pointer_index][8]
+            point = x_point, y_point
 
             # X, Y location of the center of the hand
-            x_hand_1, y_hand_1 = landmark_list[1-pointer_index][0]
-            x_hand_2, y_hand_2 = landmark_list[1-pointer_index][5]
-            x_hand_3, y_hand_3 = landmark_list[1-pointer_index][17]
-            x_hand = int(round(((x_hand_1 + x_hand_2 + x_hand_3) / 3), 0))
-            y_hand = int(round(((y_hand_1 + y_hand_2 + y_hand_3) / 3), 0))
-
             x_hand, y_hand = landmark_list[1-pointer_index][0]
+            hand = (x_hand, y_hand)
 
             # Calculate the distance between the two points
-            d = math.sqrt((((x_point - x_hand) ** 2) + ((y_point - y_hand) ** 2)))
-
+            d = dist(point, hand)
 
             # If the point is less than 50 pixels away from the center of the hand
             if d < self.hsv_icon_scale//2:
@@ -534,15 +537,12 @@ class Interpreter():
             if d < self.hsv_icon_scale:
                 # Draw a line between the center of the hand and the pointer finger
                 image_debug = cv.line(image_debug, color=self.current_color, pt1=(x_hand, y_hand),
-                                      pt2=(x_point, y_point), thickness=12)
+                                      pt2=point, thickness=12)
 
             # Calculate Geometric distance to black, white, and brown pixels
-            d_black = math.sqrt((((x_point - self.black_icon_pos[0]) ** 2) +
-                                 ((y_point - self.black_icon_pos[1]) ** 2)))
-            d_white = math.sqrt((((x_point - self.white_icon_pos[0]) ** 2) +
-                                 ((y_point - self.white_icon_pos[1]) ** 2)))
-            d_brown = math.sqrt((((x_point - self.brown_icon_pos[0]) ** 2) +
-                                 ((y_point - self.brown_icon_pos[1]) ** 2)))
+            d_black = dist(point, self.black_icon_pos)
+            d_white = dist(point, self.white_icon_pos)
+            d_brown = dist(point, self.brown_icon_pos)
 
             # Select the color
             if d_black < self.icon_radius:
@@ -554,18 +554,13 @@ class Interpreter():
 
             # Check if any of the auxiliary colors are being selected
             else:
-                self.d_select = math.sqrt((( (x_point - self.select_icon_pos[0]) ** 2) +
-                                            ((y_point - self.select_icon_pos[1]) ** 2)))
+                self.d_select = dist(point, self.select_icon_pos)
                 if self.d_select < self.icon_radius * 3:
 
-                    d_sketch = math.sqrt((((x_point - self.sketch_icon_pos[0]) ** 2) +
-                                         ((y_point - self.sketch_icon_pos[1]) ** 2)))
-                    d_line = math.sqrt((((x_point - self.line_icon_pos[0]) ** 2) +
-                                         ((y_point - self.line_icon_pos[1]) ** 2)))
-                    d_rect = math.sqrt((((x_point - self.rect_icon_pos[0]) ** 2) +
-                                         ((y_point - self.rect_icon_pos[1]) ** 2)))
-                    d_circle = math.sqrt((((x_point - self.circle_icon_pos[0]) ** 2) +
-                                        ((y_point - self.circle_icon_pos[1]) ** 2)))
+                    d_sketch = dist(point, self.sketch_icon_pos)
+                    d_line = dist(point, self.line_icon_pos)
+                    d_rect = dist(point, self.rect_icon_pos)
+                    d_circle = dist(point, self.circle_icon_pos)
 
                     text_offset = 40
 
@@ -711,11 +706,11 @@ class Interpreter():
             image_debug = cv.rectangle(image_debug, self.current_rect[0], self.current_rect[1], self.current_color,
                                   thickness=10, lineType=cv.LINE_AA)
 
-        # # Draw the set of all circles
-        # if self.circles != []:
-        #     for i, circle in enumerate(self.circles):
-        #         image_debug = cv.circle(image_debug, circle[0], circle[1], self.circle_colors[i],
-        #                                 thickness=10, lineType=cv.LINE_AA)
+        # Draw the set of all circles
+        if self.circles != []:
+            for i, circle in enumerate(self.circles):
+                image_debug = cv.circle(image_debug, circle[0], circle[1], self.circle_colors[i],
+                                        thickness=10, lineType=cv.LINE_AA)
 
         # Draw the current circle if there is one
         if self.current_circle != []:
@@ -749,6 +744,9 @@ class Interpreter():
         self.current_circle = []
         self.circles = []
         self.circle_colors = []
+
+        for ball in Ball.instances:
+            ball.kill()
 
     def hsv_to_rgb(self, h, s, v):
         """

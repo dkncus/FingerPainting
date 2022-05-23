@@ -22,7 +22,7 @@ def main():
     min_detection_confidence = 0.7
     min_tracking_confidence = 0.5
 
-    num_samples_to_collect = 2500
+    num_samples_to_collect = 1000
     num_samples_collected = 0
     currently_collecting_samples = False
     collection_label = -1
@@ -149,7 +149,7 @@ def logging_csv(number, mode, landmark_list):
     if mode == 0:
         pass
     if mode == 1 and (0 <= number <= 9):
-        file = 'model/keypoint_classifier/keypoint.csv'
+        file = 'gesture_model/model/keypoint_classifier/keypoint.csv'
         with open(file, 'a', newline="") as f:
             writer = csv.writer(f)
             writer.writerow([number, *landmark_list])

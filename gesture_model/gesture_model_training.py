@@ -43,7 +43,7 @@ if __name__ == '__main__':
     # Define model structure
     model = tf.keras.models.Sequential([
         tf.keras.layers.Input((21 * 2,)),
-        tf.keras.layers.Dense(20, activation='relu'),
+        tf.keras.layers.Dense(21, activation='relu'),
         tf.keras.layers.Dense(10, activation='relu'),
         tf.keras.layers.Dense(NUM_CLASSES, activation='softmax')
     ])

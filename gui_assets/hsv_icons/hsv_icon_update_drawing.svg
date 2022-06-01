@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="125.52945mm"
+   height="125.50496mm"
+   viewBox="0 0 125.52945 125.50496"
+   version="1.1"
+   id="svg1039"
+   inkscape:version="1.1.1 (c3084ef, 2021-09-22)"
+   sodipodi:docname="hsv_icon_update_drawing.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1041"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     showguides="false"
+     inkscape:zoom="0.59182284"
+     inkscape:cx="246.69545"
+     inkscape:cy="423.26856"
+     inkscape:window-width="1215"
+     inkscape:window-height="1067"
+     inkscape:window-x="46"
+     inkscape:window-y="25"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1036">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient8292">
+      <stop
+         style="stop-color:#fd0000;stop-opacity:1;"
+         offset="0"
+         id="stop8276" />
+      <stop
+         style="stop-color:#ffff00;stop-opacity:1"
+         offset="0.18606572"
+         id="stop8280" />
+      <stop
+         style="stop-color:#00ff00;stop-opacity:1"
+         offset="0.40165672"
+         id="stop8282" />
+      <stop
+         style="stop-color:#00fdf2;stop-opacity:1"
+         offset="0.61402112"
+         id="stop8284" />
+      <stop
+         style="stop-color:#0000ff;stop-opacity:0.9921568"
+         offset="0.81713158"
+         id="stop8286" />
+      <stop
+         style="stop-color:#ff00e6;stop-opacity:0.9921568"
+         offset="1"
+         id="stop8288" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="bend_path"
+       id="path-effect7806"
+       is_visible="true"
+       lpeversion="1"
+       bendpath="m 42.219592,198.64859 c 0,0 16.779581,18.94469 44.925974,14.0732 28.146394,-4.8715 43.843424,-20.56853 43.843424,-20.56853"
+       prop_scale="0.053998315"
+       scale_y_rel="false"
+       vertical="false"
+       hide_knot="false" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient8292"
+       id="linearGradient3206"
+       x1="107.50899"
+       y1="36.46497"
+       x2="107.50763"
+       y2="134.17444"
+       gradientUnits="userSpaceOnUse"
+       spreadMethod="pad" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient8292"
+       id="linearGradient13789"
+       gradientUnits="userSpaceOnUse"
+       x1="107.50899"
+       y1="36.46497"
+       x2="107.50763"
+       y2="134.17444"
+       spreadMethod="pad" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-76.844442,-25.436264)">
+    <circle
+       style="fill:#000000;fill-opacity:0;stroke:#ffffff;stroke-width:0.14;stroke-linecap:square;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
+       id="path1122"
+       cx="142.30389"
+       cy="85.506264"
+       r="60"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+    <path
+       style="mix-blend-mode:normal;fill:none;stroke:url(#linearGradient3206);stroke-width:10;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 107.50899,36.464969 c 0,0 -25.640736,15.29305 -25.157171,49.011997 0.483565,33.718944 25.155811,48.697474 25.155811,48.697474"
+       id="path1281"
+       sodipodi:nodetypes="czc"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+    <path
+       style="color:#000000;fill:url(#linearGradient13789);stroke:#ffffff;stroke-width:1;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 108.73438,31.617187 a 5,5 0 0 0 -3.78711,0.552735 c 0,0 -28.115923,17.104352 -27.595708,53.378906 0.518228,36.135932 27.560548,52.900392 27.560548,52.900392 a 5,5 0 0 0 6.86914,-1.67969 5,5 0 0 0 -1.67969,-6.86914 c 0,0 -22.301096,-13.19421 -22.749998,-44.496093 C 86.904649,54.241024 110.07031,40.759766 110.07031,40.759766 a 5,5 0 0 0 1.73242,-6.855469 5,5 0 0 0 -3.06835,-2.28711 z"
+       id="path1281-6"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+    <circle
+       style="fill:#643200;fill-opacity:0.992157;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path11733"
+       cx="116.75209"
+       cy="139.89745"
+       r="5"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+    <circle
+       style="fill:#000000;fill-opacity:0.992157;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path11733-2"
+       cx="127.65032"
+       cy="143.42226"
+       r="5"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+    <circle
+       style="fill:#808080;fill-opacity:0.99;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path11733-2-5"
+       cx="139.27292"
+       cy="144.94122"
+       r="5"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+    <circle
+       style="fill:#f5fff5;fill-opacity:0.99;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+       id="path11733-2-5-4"
+       cx="150.81461"
+       cy="144.56148"
+       r="5"
+       inkscape:export-filename="/Users/dkubala/PycharmProjects/HandTracking/gui_assets/hsv_icons/hsv_icon_color.png"
+       inkscape:export-xdpi="244.23077"
+       inkscape:export-ydpi="244.23077" />
+  </g>
+</svg>

@@ -101,7 +101,6 @@ class Interpreter():
     def interpret_frame(self, image):
         """
         Master function - detects hands and gestures from hands, then performs actions based on gestures
-
         :param image: The image to be pƒmprocessed
         :return: The image with the hand keypoints and interpreted drawings drawn on it.
         """
@@ -139,6 +138,7 @@ class Interpreter():
 
                 # Normalize the landmark list and detect hand gesture
                 pre_processed_landmark_list = self.pre_process_landmark(landmark_list)
+                print(pre_processed_landmark_list)
                 try:
                     hand_sign_id = self.keypoint_classifier(pre_processed_landmark_list)
                 except:
@@ -220,7 +220,6 @@ class Interpreter():
     def single_hand_gesture_handler(self, hand_sign_id, landmark_list, img_debug, handedness):
         """
         Interpret the gesture being made by the hand, and take the appropriate action
-
         :param hand_sign_id: The id of the hand sign that was detected
         :param landmark_list: a list of tuples containing the x and y coordinates of the 21 hand landmarks
         :param img_debug: The image that will be displayed to the user
@@ -254,7 +253,6 @@ class Interpreter():
                                         self.hsv_icon_scale//2,
                                         self.current_color,
                                         cv.FILLED)
-
                 x_hand_c, y_hand_c = landmark_list[0]
 
                 image_debug = cv.circle(image_debug,
@@ -336,7 +334,7 @@ class Interpreter():
                     transparency_mask[y_hand_c - s:y_hand_c + s, x_hand_c - s:x_hand_c + s, :] = mask_icon_scaled
                     image_debug[transparency_mask == 1] = color_mask[transparency_mask == 1]
 
-                # Draw the selector pallate
+                # Draw the selector palette
                 self.select_icon_pos = landmark_list[4]
                 image_debug = cv.circle(image_debug,
                                         self.select_icon_pos,
@@ -487,7 +485,6 @@ class Interpreter():
         hand, then calculate the angle between the two points and convert it from HSV degrees to an RGB color. If the line is more than 50
         pixels away from the center of the left hand, then check if the line is within the radius of the black, white, or
         brown auxiliary color icons
-
         :param hand_gesture_list: A list of the hand gestures detected for each hand
         :param landmark_list: A list of landmarks for each hand
         :param img_debug: The image that will be displayed to the user
@@ -666,7 +663,6 @@ class Interpreter():
     def draw_shapes(self, img_debug):
         """
         Draw each shape stored in the set of shapes
-
         :param img_debug: The image to draw on
         :return: The drawn on image
         """
@@ -751,22 +747,14 @@ class Interpreter():
     def hsv_to_rgb(self, h, s, v):
         """
         "Given a hue, saturation, and value, return the corresponding red, green, and blue values."
-
         The first thing it does is check if the saturation is zero. If it is, then the color is a shade of gray, and the
         red, green, and blue values are all equal to the value.
-
         If the saturation is not zero, then the function proceeds to calculate the red, green, and blue values.
-
         The first step is to calculate the hue segment, which is an integer between 0 and 5.
-
         The hue segment tells you which color in the rainbow you're dealing with.
-
         The second step is to calculate the fractional part of the hue.
-
         The fractional part tells you how far you are between the two colors in the hue segment.
-
         The third step is to calculate the RGB values
-
         :param h: Hue, as a number between 0 and 1
         :param s: saturation
         :param v: the value of the color (0-1)
@@ -787,7 +775,6 @@ class Interpreter():
     def calc_landmark_list(self, image, landmarks):
         """
         It takes in an image and a list of landmarks, and returns a list of landmark points
-
         :param image: The image to be processed
         :param landmarks: The landmarks for the image
         :return: A list of lists of x,y coordinates.
@@ -806,10 +793,13 @@ class Interpreter():
         return landmark_point
 
     def pre_process_landmark(self, landmark_list):
+        # Create a copy of the landmarks list
         temp_landmark_list = copy.deepcopy(landmark_list)
 
+        # For each landmark point
         base_x, base_y = 0, 0
         for index, landmark_point in enumerate(temp_landmark_list):
+            # Set the base point to be the point of the first landmark
             if index == 0:
                 base_x, base_y = landmark_point[0], landmark_point[1]
 
@@ -848,8 +838,6 @@ class Interpreter():
                 keyCode = cv.waitKey(1)
                 if (keyCode & 0xFF) == ord("c"):
                     self.clear_drawing()
-
-
 
 if __name__ == '__main__':
     i = Interpreter()
